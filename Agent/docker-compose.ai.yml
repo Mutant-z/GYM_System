@@ -1,0 +1,4 @@
+# Optional compose file for local AI infrastructure will be defined here later.
+# 本地 AI 基础设施的 compose 文件后续可在这里定义。
+# Typical services: Python API, Redis, Milvus, and Ollama.
+# 典型服务包括：Python API、Redis、Milvus 和 Ollama。

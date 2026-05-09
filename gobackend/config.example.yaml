@@ -1,0 +1,26 @@
+server:
+  port: 8080
+  api_prefix: /api
+
+mysql:
+  host: localhost
+  port: 3306
+  database: gym_system
+  username: root
+  password: your_mysql_password
+
+agent:
+  base_url: http://localhost:8000
+  request_timeout_seconds: 180
+
+order:
+  timeout_minutes: 15
+  timeout_scan_interval_seconds: 60
+
+auth:
+  token_ttl_hours: 24
+
+frontend:
+  enabled: true
+  working_directory: ../frontend
+  command: npm run dev -- --host 0.0.0.0 --port 5173 --strictPort

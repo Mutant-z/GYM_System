@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GYM Auth Console</title>
+    <style>
+        :root {
+            --bg: #f2efe8;
+            --panel: rgba(255, 252, 247, 0.9);
+            --ink: #1d2a32;
+            --muted: #6a7478;
+            --line: rgba(29, 42, 50, 0.12);
+            --accent: #d95d39;
+            --accent-deep: #9d3413;
+            --accent-soft: rgba(217, 93, 57, 0.14);
+            --success: #1f7a4f;
+            --error: #b3261e;
+            --shadow: 0 20px 50px rgba(45, 44, 38, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Avenir Next", "PingFang SC", "Noto Sans SC", sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at top left, rgba(217, 93, 57, 0.18), transparent 32%),
+                radial-gradient(circle at bottom right, rgba(31, 122, 79, 0.18), transparent 28%),
+                linear-gradient(135deg, #f6f1e8 0%, #ede7dc 46%, #ebe6dd 100%);
+            padding: 32px 16px;
+        }
+
+        .shell {
+            max-width: 1120px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1.08fr 0.92fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        .hero,
+        .panel {
+            background: var(--panel);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: var(--shadow);
+            border-radius: 28px;
+        }
+
+        .hero {
+            padding: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::after {
+            content: "";
+            position: absolute;
+            right: -40px;
+            bottom: -60px;
+            width: 220px;
+            height: 220px;
+            border-radius: 34px;
+            background: linear-gradient(145deg, rgba(217, 93, 57, 0.18), rgba(29, 42, 50, 0.08));
+            transform: rotate(18deg);
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: var(--accent-soft);
+            color: var(--accent-deep);
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 18px 0 10px;
+            font-size: clamp(36px, 5vw, 64px);
+            line-height: 0.96;
+            letter-spacing: -0.04em;
+        }
+
+        .lead {
+            max-width: 520px;
+            font-size: 17px;
+            line-height: 1.7;
+            color: var(--muted);
+            margin-bottom: 28px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature {
+            padding: 18px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid rgba(29, 42, 50, 0.08);
+        }
+
+        .feature strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        .feature span {
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .panel {
+            padding: 28px;
+        }
+
+        .panel-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .panel-head h2 {
+            margin: 0;
+            font-size: 24px;
+            letter-spacing: -0.02em;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--success);
+            box-shadow: 0 0 0 6px rgba(31, 122, 79, 0.12);
+        }
+
+        .tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        .tab {
+            border: 1px solid var(--line);
+            background: transparent;
+            color: var(--muted);
+            padding: 12px 14px;
+            border-radius: 16px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 180ms ease;
+        }
+
+        .tab.active {
+            color: white;
+            background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+            border-color: transparent;
+        }
+
+        .form {
+            display: none;
+            animation: rise 220ms ease;
+        }
+
+        .form.active {
+            display: block;
+        }
+
+        @keyframes rise {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        label {
+            display: block;
+            margin-bottom: 14px;
+        }
+
+        label span {
+            display: inline-block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: var(--muted);
+            font-weight: 700;
+        }
+
+        input {
+            width: 100%;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            padding: 14px 15px;
+            font-size: 15px;
+            color: var(--ink);
+            outline: none;
+            transition: 180ms ease;
+        }
+
+        input:focus {
+            border-color: rgba(217, 93, 57, 0.4);
+            box-shadow: 0 0 0 4px rgba(217, 93, 57, 0.12);
+        }
+
+        .hint {
+            margin: 0 0 18px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        button {
+            border: none;
+            border-radius: 16px;
+            padding: 13px 18px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 160ms ease, opacity 160ms ease, background 160ms ease;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+        }
+
+        .primary {
+            color: white;
+            background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+        }
+
+        .secondary {
+            color: var(--ink);
+            background: rgba(29, 42, 50, 0.07);
+        }
+
+        .ghost {
+            color: var(--muted);
+            background: transparent;
+            border: 1px solid var(--line);
+        }
+
+        .console {
+            margin-top: 22px;
+            border-top: 1px solid var(--line);
+            padding-top: 22px;
+        }
+
+        .console-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .console-head h3 {
+            margin: 0;
+            font-size: 15px;
+        }
+
+        .token-box,
+        pre {
+            width: 100%;
+            margin: 0;
+            border-radius: 18px;
+            border: 1px solid rgba(29, 42, 50, 0.08);
+            background: #172027;
+            color: #f8f5ef;
+            padding: 16px;
+            font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.65;
+            overflow: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .token-box {
+            margin-bottom: 12px;
+            min-height: 72px;
+        }
+
+        .message {
+            margin-top: 14px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            font-size: 14px;
+            line-height: 1.5;
+            display: none;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .message.success {
+            background: rgba(31, 122, 79, 0.12);
+            color: var(--success);
+        }
+
+        .message.error {
+            background: rgba(179, 38, 30, 0.1);
+            color: var(--error);
+        }
+
+        @media (max-width: 960px) {
+            .shell {
+                grid-template-columns: 1fr;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<main class="shell">
+    <section class="hero">
+        <div class="eyebrow">Self-Service Gym</div>
+        <h1>Auth<br>Console</h1>
+        <p class="lead">
+            这个页面直接对接当前 Spring Boot 认证接口，用来联调会员登录、管理员登录、获取当前登录用户和退出登录。
+        </p>
+        <div class="feature-grid">
+            <article class="feature">
+                <strong>会员登录</strong>
+                <span>调用 <code>POST /api/auth/member/login</code>，返回 token 与当前用户信息。</span>
+            </article>
+            <article class="feature">
+                <strong>管理员登录</strong>
+                <span>调用 <code>POST /api/auth/admin/login</code>，验证角色型登录链路。</span>
+            </article>
+            <article class="feature">
+                <strong>当前用户</strong>
+                <span>自动带上 Bearer Token 调用 <code>GET /api/auth/me</code>。</span>
+            </article>
+            <article class="feature">
+                <strong>退出登录</strong>
+                <span>调用 <code>POST /api/auth/logout</code>，验证 Redis 中 token 删除。</span>
+            </article>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-head">
+            <h2>认证联调</h2>
+            <span class="status-dot" title="ready"></span>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" type="button" data-target="member-form">会员登录</button>
+            <button class="tab" type="button" data-target="admin-form">管理员登录</button>
+        </div>
+
+        <form id="member-form" class="form active">
+            <p class="hint">默认测试账号示例：<code>member001 / 123456</code></p>
+            <label>
+                <span>会员账号</span>
+                <input id="member-username" name="username" placeholder="请输入会员账号" value="member001">
+            </label>
+            <label>
+                <span>会员密码</span>
+                <input id="member-password" name="password" type="password" placeholder="请输入会员密码" value="123456">
+            </label>
+            <div class="actions">
+                <button class="primary" type="submit">会员登录</button>
+                <button class="ghost" type="button" id="member-fill">填充测试账号</button>
+            </div>
+        </form>
+
+        <form id="admin-form" class="form">
+            <p class="hint">默认测试账号示例：<code>admin001 / 123456</code></p>
+            <label>
+                <span>管理员账号</span>
+                <input id="admin-username" name="username" placeholder="请输入管理员账号" value="admin001">
+            </label>
+            <label>
+                <span>管理员密码</span>
+                <input id="admin-password" name="password" type="password" placeholder="请输入管理员密码" value="123456">
+            </label>
+            <div class="actions">
+                <button class="primary" type="submit">管理员登录</button>
+                <button class="ghost" type="button" id="admin-fill">填充测试账号</button>
+            </div>
+        </form>
+
+        <div class="console">
+            <div class="console-head">
+                <h3>Token</h3>
+                <div class="actions">
+                    <button class="secondary" type="button" id="me-btn">获取当前用户</button>
+                    <button class="ghost" type="button" id="logout-btn">退出登录</button>
+                </div>
+            </div>
+            <div id="token-box" class="token-box">尚未登录</div>
+            <pre id="response-box">等待请求...</pre>
+            <div id="message" class="message"></div>
+        </div>
+    </section>
+</main>
+
+<script>
+    const tabs = document.querySelectorAll(".tab");
+    const forms = document.querySelectorAll(".form");
+    const tokenBox = document.getElementById("token-box");
+    const responseBox = document.getElementById("response-box");
+    const messageBox = document.getElementById("message");
+    const memberForm = document.getElementById("member-form");
+    const adminForm = document.getElementById("admin-form");
+    const meBtn = document.getElementById("me-btn");
+    const logoutBtn = document.getElementById("logout-btn");
+
+    const memberFill = document.getElementById("member-fill");
+    const adminFill = document.getElementById("admin-fill");
+
+    const storageKey = "gym-auth-token";
+
+    const setMessage = (text, type) => {
+        messageBox.textContent = text;
+        messageBox.className = `message show ${type}`;
+    };
+
+    const clearMessage = () => {
+        messageBox.textContent = "";
+        messageBox.className = "message";
+    };
+
+    const getToken = () => localStorage.getItem(storageKey) || "";
+
+    const setToken = (token) => {
+        if (token) {
+            localStorage.setItem(storageKey, token);
+            tokenBox.textContent = token;
+        } else {
+            localStorage.removeItem(storageKey);
+            tokenBox.textContent = "尚未登录";
+        }
+    };
+
+    const renderResponse = (payload) => {
+        responseBox.textContent = JSON.stringify(payload, null, 2);
+    };
+
+    const request = async (url, options = {}) => {
+        const token = getToken();
+        const headers = {
+            "Content-Type": "application/json",
+            ...(options.headers || {})
+        };
+        if (token) {
+            headers.Authorization = `Bearer ${token}`;
+        }
+
+        const response = await fetch(url, {
+            ...options,
+            headers
+        });
+        const data = await response.json().catch(() => ({
+            code: response.status,
+            message: "response is not valid json",
+            data: null
+        }));
+        renderResponse(data);
+        if (!response.ok || data.code !== 0) {
+            throw new Error(data.message || "request failed");
+        }
+        return data;
+    };
+
+    tabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+            tabs.forEach((item) => item.classList.remove("active"));
+            forms.forEach((form) => form.classList.remove("active"));
+            tab.classList.add("active");
+            document.getElementById(tab.dataset.target).classList.add("active");
+            clearMessage();
+        });
+    });
+
+    memberFill.addEventListener("click", () => {
+        document.getElementById("member-username").value = "member001";
+        document.getElementById("member-password").value = "123456";
+    });
+
+    adminFill.addEventListener("click", () => {
+        document.getElementById("admin-username").value = "admin001";
+        document.getElementById("admin-password").value = "123456";
+    });
+
+    memberForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        clearMessage();
+        try {
+            const payload = {
+                username: document.getElementById("member-username").value.trim(),
+                password: document.getElementById("member-password").value
+            };
+            const result = await request("/api/auth/member/login", {
+                method: "POST",
+                body: JSON.stringify(payload)
+            });
+            setToken(result.data.token);
+            setMessage("会员登录成功", "success");
+        } catch (error) {
+            setMessage(error.message, "error");
+        }
+    });
+
+    adminForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        clearMessage();
+        try {
+            const payload = {
+                username: document.getElementById("admin-username").value.trim(),
+                password: document.getElementById("admin-password").value
+            };
+            const result = await request("/api/auth/admin/login", {
+                method: "POST",
+                body: JSON.stringify(payload)
+            });
+            setToken(result.data.token);
+            setMessage("管理员登录成功", "success");
+        } catch (error) {
+            setMessage(error.message, "error");
+        }
+    });
+
+    meBtn.addEventListener("click", async () => {
+        clearMessage();
+        try {
+            await request("/api/auth/me", {
+                method: "GET"
+            });
+            setMessage("当前用户信息获取成功", "success");
+        } catch (error) {
+            setMessage(error.message, "error");
+        }
+    });
+
+    logoutBtn.addEventListener("click", async () => {
+        clearMessage();
+        try {
+            await request("/api/auth/logout", {
+                method: "POST"
+            });
+            setToken("");
+            setMessage("退出登录成功", "success");
+        } catch (error) {
+            setMessage(error.message, "error");
+        }
+    });
+
+    setToken(getToken());
+    renderResponse({ message: "Open /auth.html to start testing auth APIs." });
+</script>
+</body>
+</html>
